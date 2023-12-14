@@ -8,10 +8,10 @@ server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 if len(sys.argv) != 3:
     print("Correct usage: python script.py <IP_address> <port_number>")
-    sys.exit(1)
+    exit()
 
-IP_address = '127.0.0.1'
-Port = '8080'
+IP_address = (sys.argv[1])
+Port = (sys.argv[2])
 
 server.bind((IP_address, Port))
 
@@ -20,13 +20,13 @@ server.listen(100)
 list_of_clients = []
 
 def clientthread(conn, addr):
-    conn.send(b"Welcome to this chatroom!")  # Convert the string to bytes
+    conn.send(b"Welcome to this chatroom!") 
 
     while True:
         try:
             message = conn.recv(2048)
             if message:
-                print("<" + addr[0] + "> " + message.decode())  # Decode received bytes to string
+                print("<" + addr[0] + "> " + message.decode())
 
                 message_to_send = "<" + addr[0] + "> " + message.decode()
                 broadcast(message_to_send, conn)
@@ -42,7 +42,7 @@ def broadcast(message, connection):
     for clients in list_of_clients:
         if clients != connection:
             try:
-                clients.send(message.encode())  # Encode the message to bytes before sending
+                clients.send(message.encode())
             except Exception as e:
                 print(e)
                 clients.close()
