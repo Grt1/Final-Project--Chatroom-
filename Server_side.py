@@ -34,17 +34,19 @@ def handle_client(client_socket, address):
             print(f"Error: {e}")
             break
 
-    clients.remove(client_socket)
-    client_socket.close()
+    
     broadcast(f"{name} has left the chat.".encode())
-
+    print(f"Lost connection from {name}")
+    del clients[client_socket]
+    client_socket.close()
+    
 def broadcast(message):
     for client in clients:
         try:
             client.send(message)
         except Exception as e:
             print(f"Error broadcasting message: {e}")
-            clients.remove(client)
+            del clients[client_socket]
 
 while True:
     client_socket, client_address = server_socket.accept()
