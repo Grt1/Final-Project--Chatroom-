@@ -1,7 +1,7 @@
 import socket
 import threading
 
-HOST = '0.0.0.0' #Accepts all IPS
+HOST = '0.0.0.0' #Accepts all IP's
 PORT = 5555
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -10,30 +10,33 @@ server_socket.bind((HOST, PORT))
 
 server_socket.listen()
 
-clients = []
+clients = {}
 
 def handle_client(client_socket, address):
-    print(f"New connection from {address}")
+    client_socket.send("ENTER NAME: ".encode())
+    name = client_socket.recv(2048).decode()
+    
+    print(f"New connection from {name}")
 
     client_socket.send("Welcome to the chatroom!".encode())
 
-    broadcast(f"{address} has joined the chat!".encode())
+    broadcast(f"{name} has joined the chat!".encode())
 
-    clients.append(client_socket)
+    clients[client_socket] = name
 
     while True:
         try:
-            message = client_socket.recv(2048)
+            message = client_socket.recv(2048).decode()
             if not message:
                 break
-            broadcast(message)
+            broadcast(f"{name}: {message}".encode())
         except Exception as e:
             print(f"Error: {e}")
             break
 
     clients.remove(client_socket)
     client_socket.close()
-    broadcast(f"{address} has left the chat.".encode())
+    broadcast(f"{name} has left the chat.".encode())
 
 def broadcast(message):
     for client in clients:
