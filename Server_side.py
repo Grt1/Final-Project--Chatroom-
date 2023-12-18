@@ -17,7 +17,7 @@ def handle_client(client_socket, address):
     print(f"New connection from {address}")
 
     client_socket.send("Welcome to the chatroom!".encode())
-    name = input("Enter a name: ")
+    name = input(client_socket.send("Please enter a name: "))
 
     broadcast(f"{address} has joined the chat!".encode())
 
@@ -40,7 +40,7 @@ def handle_client(client_socket, address):
 def broadcast(message):
     for client in clients:
         try:
-            client.send(name,":", message)
+            client.send(name, ":", message)
         except Exception as e:
             print(f"Error broadcasting message: {e}")
             clients.remove(client)
