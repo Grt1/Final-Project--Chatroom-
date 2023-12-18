@@ -3,6 +3,7 @@ import threading
 
 HOST = '127.0.01'
 PORT = 5555
+name = ""
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -16,6 +17,7 @@ def handle_client(client_socket, address):
     print(f"New connection from {address}")
 
     client_socket.send("Welcome to the chatroom!".encode())
+    name = input("Enter a name: ")
 
     broadcast(f"{address} has joined the chat!".encode())
 
@@ -38,7 +40,7 @@ def handle_client(client_socket, address):
 def broadcast(message):
     for client in clients:
         try:
-            client.send(message)
+            client.send(name,":", message)
         except Exception as e:
             print(f"Error broadcasting message: {e}")
             clients.remove(client)
