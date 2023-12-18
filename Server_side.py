@@ -17,7 +17,6 @@ def handle_client(client_socket, address):
     print(f"New connection from {address}")
 
     client_socket.send("Welcome to the chatroom!".encode())
-    name = input(client_socket.send("Please enter a name: "))
 
     broadcast(f"{address} has joined the chat!".encode())
 
