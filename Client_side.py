@@ -1,32 +1,52 @@
-import socket 
-import select 
-import sys 
+import socket
+import threading
+import tkinter as tk
+from tkinter import scrolledtext, Entry, Button
 
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+IP = '127.0.0.1'
+PORT = 5555
 
-if len(sys.argv) != 3: 
-	print ("Correct usage: script, IP address, port number")
-	exit() 
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-IP_address = (sys.argv[1])
-Port = (sys.argv[2])
+print(f"Connecting to {IP}:{PORT}")
+client_socket.connect((IP, PORT))
 
-server.connect((IP_address, Port)) 
+# Tkinter GUI
+root = tk.Tk()
+root.title("Chatroom")
 
-while True: 
+# Create scrolled text area for messages
+messages_area = scrolledtext.ScrolledText(root, wrap=tk.WORD, width=40, height=10)
+messages_area.pack(padx=10, pady=10)
 
-	sockets_list = [sys.stdin, server] 
+# Entry widget for user input
+entry_field = Entry(root, width=30)
+entry_field.pack(padx=10, pady=10)
 
-	read_sockets,write_socket, error_socket = select.select(sockets_list,[],[]) 
+def receive_messages():
+    while True:
+        try:
+            message = client_socket.recv(1024).decode()
+            messages_area.insert(tk.END, message + '\n')
+            messages_area.see(tk.END)  # Scroll to the bottom
+        except Exception as e:
+            print(f"Error receiving message: {e}")
+            break
 
-	for socks in read_sockets: 
-		if socks == server: 
-			message = socks.recv(2048) 
-			print (message) 
-		else: 
-			message = sys.stdin.readline() 
-			server.send(message) 
-			sys.stdout.write("<You>") 
-			sys.stdout.write(message) 
-			sys.stdout.flush() 
-server.close() 
+# Create a thread for receiving messages
+receive_thread = threading.Thread(target=receive_messages)
+receive_thread.start()
+
+def send_message(event=None):
+    message = entry_field.get()
+    if message:
+        client_socket.send(message.encode())
+        entry_field.delete(0, tk.END)  # Clear the entry field
+
+# Button to send messages
+send_button = Button(root, text="Send", command=send_message)
+send_button.pack(pady=10)
+
+root.bind('<Return>', send_message)
+
+root.mainloop()

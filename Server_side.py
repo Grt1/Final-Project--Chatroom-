@@ -1,65 +1,51 @@
 import socket
-import select
-import sys
-from _thread import *
+import threading
 
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+HOST = '127.0.01'
+PORT = 5555
 
-if len(sys.argv) != 3:
-    print("Correct usage: python script.py <IP_address> <port_number>")
-    exit()
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-IP_address = (sys.argv[1])
-Port = (sys.argv[2])
+server_socket.bind((HOST, PORT))
 
-server.bind((IP_address, Port))
+server_socket.listen()
 
-server.listen(100)
+clients = []
 
-list_of_clients = []
+def handle_client(client_socket, address):
+    print(f"New connection from {address}")
 
-def clientthread(conn, addr):
-    conn.send(b"Welcome to this chatroom!") 
+    client_socket.send("Welcome to the chatroom!".encode())
+
+    broadcast(f"{address} has joined the chat!".encode())
+
+    clients.append(client_socket)
 
     while True:
         try:
-            message = conn.recv(2048)
-            if message:
-                print("<" + addr[0] + "> " + message.decode())
-
-                message_to_send = "<" + addr[0] + "> " + message.decode()
-                broadcast(message_to_send, conn)
-
-            else:
-                remove(conn)
-
+            message = client_socket.recv(1024)
+            if not message:
+                break
+            broadcast(message)
         except Exception as e:
-            print(e)
-            continue
+            print(f"Error: {e}")
+            break
 
-def broadcast(message, connection):
-    for clients in list_of_clients:
-        if clients != connection:
-            try:
-                clients.send(message.encode())
-            except Exception as e:
-                print(e)
-                clients.close()
-                remove(clients)
+    clients.remove(client_socket)
+    client_socket.close()
+    broadcast(f"{address} has left the chat.".encode())
 
-def remove(connection):
-    if connection in list_of_clients:
-        list_of_clients.remove(connection)
+def broadcast(message):
+    for client in clients:
+        try:
+            client.send(message)
+        except Exception as e:
+            print(f"Error broadcasting message: {e}")
+            clients.remove(client)
 
 while True:
-    conn, addr = server.accept()
+    client_socket, client_address = server_socket.accept()
 
-    list_of_clients.append(conn)
-
-    print(addr[0] + " connected")
-
-    start_new_thread(clientthread, (conn, addr))
-
-conn.close()
-server.close()
+    # Create a new thread for the client
+    client_handler = threading.Thread(target=handle_client, args=(client_socket, client_address))
+    client_handler.start()
