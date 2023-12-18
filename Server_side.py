@@ -1,9 +1,8 @@
 import socket
 import threading
 
-HOST = '127.0.0.1'
+HOST = '0.0.0.0' #Accepts all IPS
 PORT = 5555
-name = ""
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -24,7 +23,7 @@ def handle_client(client_socket, address):
 
     while True:
         try:
-            message = client_socket.recv(1024)
+            message = client_socket.recv(2048)
             if not message:
                 break
             broadcast(message)
@@ -39,7 +38,7 @@ def handle_client(client_socket, address):
 def broadcast(message):
     for client in clients:
         try:
-            client.send(name, ":", message)
+            client.send(message)
         except Exception as e:
             print(f"Error broadcasting message: {e}")
             clients.remove(client)

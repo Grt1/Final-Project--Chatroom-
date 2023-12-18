@@ -3,7 +3,7 @@ import threading
 import tkinter as tk
 from tkinter import scrolledtext, Entry, Button
 
-IP = '127.0.0.1'
+IP = '10.86.101.102'
 PORT = 5555
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
